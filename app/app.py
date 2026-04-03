@@ -1,7 +1,7 @@
 import sys
 import os
 
-# 🔥 ALWAYS POINT TO PROJECT ROOT
+# Ensure root path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
@@ -12,19 +12,14 @@ import pandas as pd
 
 from src.auth import init_users_table, create_user, login_user
 from src.pipeline import run_pipeline
-from src.db import fetch_data
-import src.queries as q
 from src.recommender import get_strategy
 from src.clustering import predict_segment
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="Clustrix", layout="wide")
 
-# ---------------- SAFE INIT ----------------
-# Ensure data folder exists
+# ---------------- INIT ----------------
 os.makedirs("data", exist_ok=True)
-
-# Ensure users table exists
 init_users_table()
 
 # ---------------- SESSION ----------------
@@ -34,7 +29,7 @@ if "authenticated" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 
-# ---------------- LOGIN PAGE ----------------
+# ---------------- LOGIN ----------------
 if not st.session_state.authenticated:
 
     st.title("🔐 Clustrix Login")
@@ -64,7 +59,7 @@ if not st.session_state.authenticated:
                 else:
                     st.error("Username already exists")
             else:
-                st.warning("Please enter valid details")
+                st.warning("Enter valid details")
 
     st.stop()
 
@@ -72,23 +67,15 @@ if not st.session_state.authenticated:
 st.markdown("""
 <style>
 .stApp { background-color: #f8fafc; }
-
-.title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #111827;
-}
-
+.title { font-size: 28px; font-weight: 700; color: #111827; }
 .kpi-card {
-    background-color: white;
+    background: white;
     padding: 18px;
     border-radius: 12px;
     border: 1px solid #e5e7eb;
 }
-
 .kpi-title { color: #6b7280; font-size: 13px; }
 .kpi-value { font-size: 24px; font-weight: 600; }
-
 .insight {
     background: #f1f5f9;
     padding: 12px;
@@ -103,7 +90,7 @@ st.markdown("""
 col1, col2 = st.columns([6,4])
 
 with col1:
-    st.markdown("<div class='title'>Clustrix — Customer Intelligence</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title'>Clustrix — Customer Intelligence Platform</div>", unsafe_allow_html=True)
 
 with col2:
     nav1, nav2, nav3, nav4, nav5 = st.columns(5)
@@ -127,21 +114,30 @@ page = st.session_state.page
 def load_data():
     try:
         return run_pipeline()
-    except Exception as e:
-        st.error("Pipeline failed. Regenerating data...")
+    except:
         return pd.DataFrame()
 
 df = load_data()
 
-# ---------------- SAFETY ----------------
 if df.empty:
-    st.warning("No data available. Please check dataset generation.")
+    st.error("Data pipeline failed. Please check logs.")
     st.stop()
 
 # ---------------- DASHBOARD ----------------
 if page == "Dashboard":
 
-    st.subheader("Overview")
+    st.markdown("""
+    ### 📊 Overview
+
+    This dashboard provides a comprehensive view of customer segmentation using machine learning.
+
+    It helps identify:
+    - High-value customers
+    - Loyal users
+    - At-risk customers
+
+    enabling **data-driven business decisions**.
+    """)
 
     total = len(df)
     avg_clv = df['clv'].mean()
@@ -157,19 +153,44 @@ if page == "Dashboard":
 
     st.markdown("""
     <div class='insight'>
-    High-value customers are driving revenue. Focus on retention and upselling.
+    High-value customers drive most revenue. Focus on retention and upselling.
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    st.markdown("""
+    ### 📈 Segmentation Insights
 
+    - Bar chart shows distribution across segments  
+    - Scatter plot shows income vs spending behavior  
+    """)
+
+    col1, col2 = st.columns(2)
     col1.plotly_chart(px.histogram(df, x="segment", color="segment"), use_container_width=True)
     col2.plotly_chart(px.scatter(df, x="annual_income", y="spending_score", color="segment"), use_container_width=True)
+
+    st.markdown("""
+    ### 🏁 Final Takeaway
+
+    - High-value customers drive revenue  
+    - Loyal customers ensure stability  
+    - At-risk customers need retention  
+    - Low-value customers need engagement  
+
+    👉 Focus on retention + upselling
+    """)
 
 # ---------------- EXPLORER ----------------
 elif page == "Explorer":
 
-    st.subheader("Customer Explorer")
+    st.markdown("""
+    ### 🔍 Customer Explorer
+
+    Explore customer segments and analyze behavior patterns.
+
+    Useful for:
+    - Targeting campaigns  
+    - Understanding demographics  
+    """)
 
     seg = st.selectbox("Segment", df['segment'].unique())
     filtered = df[df.segment == seg]
@@ -177,10 +198,20 @@ elif page == "Explorer":
     st.write(f"{len(filtered)} customers")
     st.dataframe(filtered.sample(min(300, len(filtered))))
 
+    st.markdown("""
+    <div class='insight'>
+    Use this to identify patterns and plan targeted strategies.
+    </div>
+    """, unsafe_allow_html=True)
+
 # ---------------- STRATEGY ----------------
 elif page == "Strategy":
 
-    st.subheader("Strategy Engine")
+    st.markdown("""
+    ### 🎯 Strategy Engine
+
+    Predict customer segment and get marketing recommendations.
+    """)
 
     income = st.slider("Income",20000,150000,50000)
     spending = st.slider("Spending",0,200,50)
@@ -201,24 +232,44 @@ elif page == "Strategy":
         cluster = predict_segment(input_df)[0]
         seg_map = ["High Value Customers","Loyal Customers","At Risk Customers","Low Value Customers"]
 
-        st.success(f"Segment: {seg_map[cluster]}")
-        st.info(get_strategy(seg_map[cluster]))
+        seg = seg_map[cluster]
+
+        st.success(f"Segment: {seg}")
+        st.info(get_strategy(seg))
+
+        st.markdown("""
+        <div class='insight'>
+        Recommendation based on customer behavior for maximizing ROI.
+        </div>
+        """, unsafe_allow_html=True)
 
 # ---------------- INSIGHTS ----------------
 elif page == "Insights":
 
-    st.subheader("Business Insights")
+    st.markdown("""
+    ### 📊 Business Insights
+
+    Analyze revenue contribution by customer segments.
+    """)
 
     rev = df.groupby("segment")["clv"].sum().reset_index()
 
     st.plotly_chart(px.bar(rev, x="segment", y="clv", color="segment"), use_container_width=True)
 
     st.markdown("""
-    - High-value users dominate revenue  
-    - At-risk users need retention  
-    - Loyal users = upsell opportunity  
+    <div class='insight'>
+    Focus on high-performing segments and improve engagement for low-performing ones.
+    </div>
+    """, unsafe_allow_html=True)
 
-    Expected impact:
+    st.markdown("""
+    ### Final Insights
+
+    - High-value customers dominate revenue  
+    - At-risk customers need attention  
+    - Loyal customers are upsell opportunities  
+
+    Expected Impact:
     - 15–25% revenue increase  
     - 1.5x retention improvement  
     """)
