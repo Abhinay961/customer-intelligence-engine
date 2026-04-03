@@ -18,7 +18,7 @@ from src.recommender import get_strategy
 from src.clustering import predict_segment
 
 # ---------------- CONFIG ----------------
-st.set_page_config(page_title="Segmint AI", layout="wide")
+st.set_page_config(page_title="Clustrix", layout="wide")
 
 # ---------------- SAFE INIT ----------------
 # Ensure data folder exists
@@ -37,7 +37,7 @@ if "page" not in st.session_state:
 # ---------------- LOGIN PAGE ----------------
 if not st.session_state.authenticated:
 
-    st.title("🔐 Segmint AI Login")
+    st.title("🔐 Clustrix Login")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
@@ -103,7 +103,7 @@ st.markdown("""
 col1, col2 = st.columns([6,4])
 
 with col1:
-    st.markdown("<div class='title'>Segmint AI — Customer Intelligence</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title'>Clustrix — Customer Intelligence</div>", unsafe_allow_html=True)
 
 with col2:
     nav1, nav2, nav3, nav4, nav5 = st.columns(5)
