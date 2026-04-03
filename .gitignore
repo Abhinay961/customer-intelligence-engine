@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pkl
+.env
+data/database.db
+data/customers.csv
