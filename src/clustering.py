@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import joblib
+import os
 
 MODEL_PATH = "models/clustering_model.pkl"
 
@@ -15,6 +16,8 @@ FEATURES = [
 
 def train_model(df):
 
+    os.makedirs("models", exist_ok=True)
+
     X = df[FEATURES]
 
     scaler = StandardScaler()
@@ -23,18 +26,10 @@ def train_model(df):
     model = KMeans(n_clusters=4, random_state=42)
     df['cluster'] = model.fit_predict(X_scaled)
 
-    joblib.dump((model, scaler), MODEL_PATH)
+    # 🔥 SAFE SAVE
+    try:
+        joblib.dump((model, scaler), MODEL_PATH)
+    except:
+        pass
 
     return df
-
-
-def load_model():
-    return joblib.load(MODEL_PATH)
-
-
-def predict_segment(input_df):
-
-    model, scaler = load_model()
-    X = scaler.transform(input_df[FEATURES])
-
-    return model.predict(X)

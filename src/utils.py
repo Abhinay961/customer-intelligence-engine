@@ -1,8 +1,6 @@
 def map_cluster_to_segment(df):
 
-    cluster_summary = df.groupby("cluster").agg({
-        "clv": "mean"
-    }).sort_values("clv")
+    cluster_summary = df.groupby("cluster")["clv"].mean().sort_values()
 
     labels = [
         "Low Value Customers",
